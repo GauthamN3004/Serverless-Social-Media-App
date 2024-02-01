@@ -1,0 +1,115 @@
+service: serverless-social-media-app
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: ap-south-1
+
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  createUser:
+    handler: handler.createUser
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: post
+          path: api/users
+  getUser:
+    handler: handler.getUserById
+    events:
+      - http:
+          method: get
+          path: api/users/{id}
+  updateUser:
+    handler: handler.updateUser
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: put
+          path: api/users/{id}
+  deleteUser:
+    handler: handler.deleteUser
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: delete
+          path: api/users/{id}
+
+# You can add CloudFormation resource templates here
+resources:
+  Resources:
+    SSMAMainTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SSMA_Main
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: InvertedIndex
+            KeySchema:
+              - AttributeName: SK
+                KeyType: HASH
+              - AttributeName: PK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    SSMAFeedTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SSMA_Feed
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: postId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: postId
+            KeyType: RANGE
+        LocalSecondaryIndexes:
+          - IndexName: TimestampIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL

@@ -12,9 +12,10 @@ plugins:
 
 functions:
   createUser:
-    handler: handler.createUser
+    handler: lambda_functions/user_handler.createUser
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -25,16 +26,22 @@ functions:
       - http:
           method: post
           path: api/users
+
   getUser:
-    handler: handler.getUserById
+    handler: lambda_functions/user_handler.getUserById
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     events:
       - http:
           method: get
           path: api/users/{id}
+
   updateUser:
-    handler: handler.updateUser
+    handler: lambda_functions/user_handler.updateUser
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -45,10 +52,12 @@ functions:
       - http:
           method: put
           path: api/users/{id}
+
   deleteUser:
-    handler: handler.deleteUser
+    handler: lambda_functions/user_handler.deleteUser
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -60,7 +69,73 @@ functions:
           method: delete
           path: api/users/{id}
 
-# You can add CloudFormation resource templates here
+  addFollower:
+    handler: lambda_functions/follower_handler.addFollower
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: post
+          path: api/users/{id}/follower
+
+  removeFollower:
+    handler: lambda_functions/follower_handler.removeFollower
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: delete
+          path: api/users/{id}/follower
+
+  getFollowers:
+    handler: lambda_functions/follower_handler.getFollowers
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:Query
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: get
+          path: api/users/{id}/follower
+
+  getFollowees:
+    handler: lambda_functions/follower_handler.getFollowees
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:Query
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
+    events:
+      - http:
+          method: get
+          path: api/users/{id}/followee
+
 resources:
   Resources:
     SSMAMainTable:
@@ -87,6 +162,7 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
+
     SSMAFeedTable:
       Type: AWS::DynamoDB::Table
       Properties:

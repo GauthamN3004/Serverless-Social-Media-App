@@ -35,7 +35,7 @@ functions:
     events:
       - http:
           method: get
-          path: api/users/{id}
+          path: api/users/{userId}
 
   updateUser:
     handler: lambda_functions/user_handler.updateUser
@@ -51,7 +51,7 @@ functions:
     events:
       - http:
           method: put
-          path: api/users/{id}
+          path: api/users/{userId}
 
   deleteUser:
     handler: lambda_functions/user_handler.deleteUser
@@ -67,7 +67,7 @@ functions:
     events:
       - http:
           method: delete
-          path: api/users/{id}
+          path: api/users/{userId}
 
   addFollower:
     handler: lambda_functions/follower_handler.addFollower
@@ -83,7 +83,7 @@ functions:
     events:
       - http:
           method: post
-          path: api/users/{id}/follower
+          path: api/users/{userId}/follower
 
   removeFollower:
     handler: lambda_functions/follower_handler.removeFollower
@@ -99,7 +99,7 @@ functions:
     events:
       - http:
           method: delete
-          path: api/users/{id}/follower
+          path: api/users/{userId}/follower
 
   getFollowers:
     handler: lambda_functions/follower_handler.getFollowers
@@ -116,7 +116,7 @@ functions:
     events:
       - http:
           method: get
-          path: api/users/{id}/follower
+          path: api/users/{userId}/follower
 
   getFollowees:
     handler: lambda_functions/follower_handler.getFollowees
@@ -134,7 +134,66 @@ functions:
     events:
       - http:
           method: get
-          path: api/users/{id}/followee
+          path: api/users/{userId}/followee
+
+  createPost:
+    handler: lambda_functions/posts_handler.createPost
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: post
+          path: api/users/{userId}/posts
+
+  getPost:
+    handler: lambda_functions/posts_handler.getPostById
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    events:
+      - http:
+          method: get
+          path: api/users/{userId}/posts/{postId}
+
+  updatePost:
+    handler: lambda_functions/posts_handler.updatePost
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: put
+          path: api/users/{userId}/posts/{postId}
+
+  deletePost:
+    handler: lambda_functions/posts_handler.deletePost
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: delete
+          path: api/users/{userId}/posts/{postId}
+
 
 resources:
   Resources:

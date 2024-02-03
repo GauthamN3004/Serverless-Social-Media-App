@@ -5,7 +5,7 @@ const documentClient = new dynamoDB.DocumentClient({region: 'ap-south-1'});
 module.exports.addFollower = async (event, context, cb) => {
 	let event_data = JSON.parse(event.body);
 	const tableName = process.env.MAIN_TABLE;
-	let userId = event.pathParameters.id;
+	let userId = event.pathParameters.userId;
 	try{
 		const params = {
 			TableName : tableName,
@@ -42,7 +42,7 @@ module.exports.removeFollower = async (event, context, cb) => {
 	try{
 		var params = {
 			TableName: tableName,
-			Key: { PK: `FOLLOWEE#ID#${event.pathParameters.id}`, SK: `FOLLOWER#ID#${event_data.follower_id}` },
+			Key: { PK: `FOLLOWEE#ID#${event.pathParameters.userId}`, SK: `FOLLOWER#ID#${event_data.follower_id}` },
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
 		};
 		await documentClient.delete(params).promise();
@@ -71,7 +71,7 @@ module.exports.getFollowers = async (event, context, cb) => {
             TableName: tableName,
             KeyConditionExpression: 'PK = :pk',
             ExpressionAttributeValues: {
-                ':pk': `FOLLOWEE#ID#${event.pathParameters.id}`
+                ':pk': `FOLLOWEE#ID#${event.pathParameters.userId}`
             },
             ScanIndexForward: true
         };
@@ -104,7 +104,7 @@ module.exports.getFollowees = async (event, context, cb) => {
             IndexName: 'InvertedIndex',
             KeyConditionExpression: 'SK = :sk',
             ExpressionAttributeValues: {
-                ':sk': `FOLLOWER#ID#${event.pathParameters.id}`
+                ':sk': `FOLLOWER#ID#${event.pathParameters.userId}`
             },
             ScanIndexForward: true
         };

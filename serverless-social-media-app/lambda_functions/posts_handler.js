@@ -12,7 +12,7 @@ module.exports.createPost = async (event, context, cb) => {
 			TableName : tableName,
 			Item: {
 			   PK: `POST#ID#${postId}`,
-			   SK: `USER#UNAME#${event.pathParameters.userId}`,
+			   SK: `USER#ID#${event.pathParameters.userId}`,
 			   postReady: 'N',
                postCaption: event_data.caption,
                likes: 0,
@@ -49,7 +49,7 @@ module.exports.updatePost = async (event, context, cb) => {
         let postId = event.pathParameters.postId;
 		var params = {
 			TableName: tableName,
-			Key: { PK: `POST#ID#${postId}`, SK: `USER#UNAME#${userId}`},
+			Key: { PK: `POST#ID#${postId}`, SK: `USER#ID#${userId}`},
 			UpdateExpression: 'set #att1 = :val1',
 			ExpressionAttributeNames: {'#att1': 'postCaption'},
 			ExpressionAttributeValues: {':val1' : event_data.caption},
@@ -97,7 +97,7 @@ module.exports.deletePost = async (event, context, cb) => {
         let postId = event.pathParameters.postId;
 		var params = {
 			TableName: tableName,
-			Key: { PK: `POST#ID#${postId}`, SK: `USER#UNAME#${userId}`},
+			Key: { PK: `POST#ID#${postId}`, SK: `USER#ID#${userId}`},
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
 		};
 		await documentClient.delete(params).promise();

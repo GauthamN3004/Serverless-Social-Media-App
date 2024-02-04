@@ -194,6 +194,40 @@ functions:
           method: delete
           path: api/users/{userId}/posts/{postId}
 
+  likePost:
+    handler: lambda_functions/likes_handler.likePost
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: post
+          path: api/users/{userId}/posts/{postId}/like
+
+  unlikePost:
+    handler: lambda_functions/likes_handler.unlikePost
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: delete
+          path: api/users/{userId}/posts/{postId}/like
+
 
 resources:
   Resources:

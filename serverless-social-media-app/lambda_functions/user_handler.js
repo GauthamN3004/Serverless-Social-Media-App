@@ -40,7 +40,7 @@ module.exports.createUser = async (event, context, cb) => {
 
 module.exports.updateUser = async (event, context, cb) => {
 	let event_data = JSON.parse(event.body);
-	let userId = event.pathParameters.id;
+	let userId = event.pathParameters.userId;
 	const tableName = process.env.MAIN_TABLE;
 	try{
 		let pk = `USER#ID#${userId}`;
@@ -73,7 +73,7 @@ module.exports.updateUser = async (event, context, cb) => {
 };
 
 module.exports.getUserById = async (event) => {
-	let userId = event.pathParameters.id;
+	let userId = event.pathParameters.userId;
 	return {
     statusCode: 200,
     headers: {
@@ -81,7 +81,7 @@ module.exports.getUserById = async (event) => {
     },
     body: JSON.stringify({
       status: 'success',
-      message: `User ${userId} updated`,
+      message: `User ${userId}`,
     }),
   };
 };
@@ -90,7 +90,7 @@ module.exports.deleteUser = async (event, context, cb) => {
 	let event_data = JSON.parse(event.body);
 	const tableName = process.env.MAIN_TABLE;
 	try{
-		let pk = `USER#ID#${event.pathParameters.id}`;
+		let pk = `USER#ID#${event.pathParameters.userId}`;
 		let sk = `USER#UNAME#${event_data.username}`;
 		var params = {
 			TableName: tableName,

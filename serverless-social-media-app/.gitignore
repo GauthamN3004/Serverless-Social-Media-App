@@ -7,3 +7,6 @@ jspm_packages
 
 # Test Script
 ./test.js
+
+# Env File
+./.env

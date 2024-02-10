@@ -11,6 +11,9 @@ plugins:
   - serverless-iam-roles-per-function
 
 functions:
+  authorizer:
+    handler: lambda_functions/auth_handler.authorizer    
+
   createUser:
     handler: lambda_functions/user_handler.createUser
     environment: 
@@ -52,6 +55,7 @@ functions:
       - http:
           method: put
           path: api/users/{userId}
+          authorizer: authorizer
 
   deleteUser:
     handler: lambda_functions/user_handler.deleteUser
@@ -68,6 +72,7 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}
+          authorizer: authorizer
 
   addFollower:
     handler: lambda_functions/follower_handler.addFollower
@@ -84,6 +89,7 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/follower
+          authorizer: authorizer
 
   removeFollower:
     handler: lambda_functions/follower_handler.removeFollower
@@ -100,6 +106,7 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/follower
+          authorizer: authorizer
 
   getFollowers:
     handler: lambda_functions/follower_handler.getFollowers
@@ -117,6 +124,7 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/follower
+          authorizer: authorizer
 
   getFollowees:
     handler: lambda_functions/follower_handler.getFollowees
@@ -135,6 +143,7 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/followee
+          authorizer: authorizer
 
   createPost:
     handler: lambda_functions/posts_handler.createPost
@@ -151,6 +160,7 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts
+          authorizer: authorizer
 
   getPost:
     handler: lambda_functions/posts_handler.getPostById
@@ -161,6 +171,7 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/posts/{postId}
+          authorizer: authorizer
 
   updatePost:
     handler: lambda_functions/posts_handler.updatePost
@@ -177,6 +188,7 @@ functions:
       - http:
           method: put
           path: api/users/{userId}/posts/{postId}
+          authorizer: authorizer
 
   deletePost:
     handler: lambda_functions/posts_handler.deletePost
@@ -193,6 +205,7 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}
+          authorizer: authorizer
 
   likePost:
     handler: lambda_functions/likes_handler.likePost
@@ -210,6 +223,7 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts/{postId}/like
+          authorizer: authorizer
 
   unlikePost:
     handler: lambda_functions/likes_handler.unlikePost
@@ -227,6 +241,7 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}/like
+          authorizer: authorizer
 
 
 resources:

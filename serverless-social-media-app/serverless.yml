@@ -14,21 +14,40 @@ functions:
   authorizer:
     handler: lambda_functions/auth_handler.authorizer    
 
-  createUser:
-    handler: lambda_functions/user_handler.createUser
+  userLogin:
+    handler: lambda_functions/login_signup_handler.userLogin
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - dynamodb:PutItem
+          - dynamodb:Query
         Resource: 
           - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
     events:
       - http:
           method: post
-          path: api/users
+          path: api/auth/login
+
+  userSignUp:
+    handler: lambda_functions/login_signup_handler.userSignUp
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
+    events:
+      - http:
+          method: post
+          path: api/auth/signup
 
   getUser:
     handler: lambda_functions/user_handler.getUserById

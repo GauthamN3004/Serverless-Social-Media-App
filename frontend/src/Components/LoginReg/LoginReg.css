@@ -1,0 +1,44 @@
+.image-div img{
+    width: 100%;
+    margin-top: 20px;
+}
+
+.myform{
+    margin: auto;
+    margin-top: 100px;
+    padding: 30px;
+    width: 400px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,1);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.myform button{
+    width: 80%;
+    color: white;
+}
+
+.myform button:hover{
+    color: white;
+}
+
+.myform a {
+    color: rgb(41, 149, 250);
+    font-weight: bold;
+    text-decoration: none;
+    transition-duration: 0.3s;
+}
+
+.myform a:hover {
+    color: rgb(0, 81, 157);
+    font-weight: bold;
+    transition-duration: 0.3s;
+}
+
+
+@media screen and (max-width: 1000px) {
+    .myform{
+        width: min(100%, 400px);
+        margin-top: 80px;
+    }
+}

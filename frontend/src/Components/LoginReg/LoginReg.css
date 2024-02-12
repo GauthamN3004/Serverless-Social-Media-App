@@ -1,5 +1,5 @@
 .image-div img{
-    width: 100%;
+    width: min(100%, 800px);
     margin-top: 20px;
 }
 
@@ -19,6 +19,14 @@
 }
 
 .myform button:hover{
+    color: white;
+}
+
+.myform button span{
+    color: white;
+}
+
+.myform button:hover span{
     color: white;
 }
 

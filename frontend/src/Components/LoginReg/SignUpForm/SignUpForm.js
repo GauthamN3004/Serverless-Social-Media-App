@@ -1,6 +1,9 @@
 import "../LoginReg.css";
 import { Link } from 'react-router-dom';
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
+import axios from "axios";
 
 function SignUpForm() {
     const [email, setEmail] = useState('');
@@ -8,10 +11,37 @@ function SignUpForm() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSignUp = (e) => {
+    const navigate = useNavigate();
+
+    const handleSignUp = async (e) => {
         e.preventDefault();
-        console.log(email + " " + fullName);
-        console.log(username + " " + password);
+        const data = {
+            email: email,
+            full_name: fullName,
+            username: username,
+            password: password
+        };
+        try{
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/signup`, data, {
+                validateStatus: function (status) {
+                    return status >= 200 && status < 500;
+                },
+            });
+            
+            if(response.status == 201){
+                toast.success(response.data.message);
+                setTimeout(() => {
+                    navigate("/");
+                }, 10);
+            }
+            else{
+                console.log("error");
+                toast.error(response.data.message);
+            }
+        } catch(error){
+            toast.error(error.message);
+        }
+        
     };
 
     return (

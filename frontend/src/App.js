@@ -1,7 +1,8 @@
 import './App.css';
-import { Outlet, Route, Routes } from 'react-router-dom';
-import toast, { Toaster } from 'react-hot-toast';
-import bg_image from './bg_image.jpg';
+import { Route, Routes } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import ProtectedRoute from './Routes/ProtectedRoutes';
+
 
 import Homepage from './Pages/Homepage/Homepage';
 import SignUpPage from './Pages/SignUp/SignUp';
@@ -13,7 +14,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/feed" element={<UserFeed />} />
+        <Route element={<ProtectedRoute />}>
+            <Route element={<UserFeed/>} path="/feed" exact/>
+        </Route>
+        {/* <Route path="/feed" element={<UserFeed />} /> */}
       </Routes>
       <Toaster />
     </>

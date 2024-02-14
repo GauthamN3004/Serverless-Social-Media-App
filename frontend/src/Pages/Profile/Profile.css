@@ -1,0 +1,50 @@
+
+.parent-div {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
+}
+
+
+.profile-data{
+    margin: auto;
+    margin-top: 30px;
+    width: 70%;
+    padding: 20px;
+    box-shadow: 0px 0px 10px;
+}
+
+.profile-pic img {
+    height: 230px;
+    width: 230px;
+    border: 5px solid rgba(0, 0, 0, 0.5);
+    border-radius: 150px;
+}
+
+.user-stats{
+    width: 400px;
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+    padding-bottom: 30px;
+}
+
+.user-stats * {
+    margin: 0px;
+    color: rgb(77, 77, 77) ;
+}
+
+.username{
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.stat-title{
+    font-weight: bold;
+}
+
+.full-name {
+    font-size: 18px;
+}

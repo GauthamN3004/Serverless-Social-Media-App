@@ -7,17 +7,18 @@ import ProtectedRoute from './Routes/ProtectedRoutes';
 import Homepage from './Pages/Homepage/Homepage';
 import SignUpPage from './Pages/SignUp/SignUp';
 import UserFeed from './Pages/UserFeed/UserFeed';
+import Profile from './Pages/Profile/Profile';
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Homepage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/" exact element={<Homepage />} />
+        <Route path="/signup" exact element={<SignUpPage />} />
         <Route element={<ProtectedRoute />}>
-            <Route element={<UserFeed/>} path="/feed" exact/>
+            <Route path="/feed" element={<UserFeed/>} exact/>
+            <Route path="/profile/:username" element={<Profile />} />
         </Route>
-        {/* <Route path="/feed" element={<UserFeed />} /> */}
       </Routes>
       <Toaster />
     </>

@@ -30,16 +30,13 @@ const generateAuthResponse = (user, effect, methodArn) => {
 
 module.exports.authorizer = async (event, context) => {
     try {
-        console.log("seckey " + secretKey);
         const token = event.authorizationToken;
-        console.log("token " + token);
         const decoded = jwt.verify(token, secretKey);
-        console.log(decoded);
         const user = decoded.data;
-        console.log(user);
 
         return generateAuthResponse(user, 'Allow', event.methodArn);
     } catch (error) {
+        console.log(error.message);
         const dummy_user = {userId: -1};
         return generateAuthResponse(dummy_user, 'Deny', event.methodArn);
     }

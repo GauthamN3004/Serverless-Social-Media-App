@@ -26,6 +26,10 @@ const getUser = async (username) => {
 const getResponse = (statusCode, status, message) => {
     return {
         statusCode: statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
         body: JSON.stringify({
             status: status,
             message: message,
@@ -57,8 +61,13 @@ module.exports.userLogin = async (event, context) => {
 
         const secretKey = process.env.SECRET_KEY;
         const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
+        const message = {
+            "token": token,
+            "userId": user['PK'],
+            "username": user['SK']
+        }
 
-        return  getResponse(200, 'success', token);
+        return  getResponse(200, 'success', message);
     } catch(error) {
         return getResponse(500, 'error', error.message);
     }

@@ -2,7 +2,49 @@
 const dynamoDB = require("aws-sdk/clients/dynamodb");
 const documentClient = new dynamoDB.DocumentClient({region: 'ap-south-1'});
 
-module.exports.updateUser = async (event, context, cb) => {
+const getResponse = (statusCode, status, message, data) => {
+    return {
+        statusCode: statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
+        body: JSON.stringify({
+            status: status,
+            message: message,
+			data: data
+        }),
+    }
+}
+
+module.exports.getUserByUsername = async (event) => {
+	const queryStringParameters = event.queryStringParameters;
+	const tableName = process.env.MAIN_TABLE;
+	if(queryStringParameters) {
+		const username = queryStringParameters.username;
+		var params = {
+			TableName: tableName,
+			IndexName: 'InvertedIndex',
+			KeyConditionExpression: 'SK = :sk',
+			ExpressionAttributeValues: {
+				':sk': `USER#UNAME#${username}` 
+			}
+		};
+	
+		const resp = await documentClient.query(params).promise();
+		const data = resp['Items'];
+		if(data.length > 0){
+			return getResponse(200, 'success', 'User data found', data);
+		}
+		
+		return getResponse(404, "error", `No user found with username ${username}`, []);
+	} else {
+		return getResponse(400, "error", 'No query string parameters provided', []);
+    }
+};
+
+
+module.exports.updateUser = async (event, context) => {
 	let event_data = JSON.parse(event.body);
 	let userId = event.pathParameters.userId;
 	const tableName = process.env.MAIN_TABLE;
@@ -18,36 +60,11 @@ module.exports.updateUser = async (event, context, cb) => {
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
 		};
 		await documentClient.update(params).promise();
-		cb(null, {
-			statusCode: 200,
-			body: JSON.stringify({
-				status: 'success',
-				message: 'User data updated successfully.',
-			}),
-	    });
-	} catch(error) {
-		cb(null, {
-			statusCode: 500,
-			body: JSON.stringify({
-				status: 'error',
-				message: error.message,
-			}),
-	    });
-	}
-};
 
-module.exports.getUserById = async (event) => {
-	let userId = event.pathParameters.userId;
-	return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      status: 'success',
-      message: `User ${userId}`,
-    }),
-  };
+		return getResponse(200, 'success', 'User data updated successfully.', []);
+	} catch(error) {
+		return getResponse(500, 'error', error.message, []);
+	}
 };
 
 module.exports.deleteUser = async (event, context, cb) => {
@@ -62,20 +79,8 @@ module.exports.deleteUser = async (event, context, cb) => {
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
 		};
 		await documentClient.delete(params).promise();
-		return {
-			statusCode: 200,
-			body: JSON.stringify({
-				status: 'success',
-				message: `User deleted successfully.`,
-			})
-		};
+		return getResponse(200, 'success', 'User deleted successfully.', []);
 	} catch(error) {
-		cb(null, {
-			statusCode: 500,
-			body: JSON.stringify({
-				status: 'error',
-				message: error.message,
-			}),
-	    });
+		return getResponse(500, "error", error.message, []);
 	}
 };

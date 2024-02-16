@@ -33,13 +33,23 @@
 
 .user-stats * {
     margin: 0px;
-    color: rgb(77, 77, 77) ;
+    color: rgb(110, 110, 110) ;
 }
 
 .username{
     font-weight: bold;
     font-size: 20px;
+    margin-bottom: 20px;
 }
+
+.username p{
+    margin-bottom: 5px;
+}
+
+.username button .btn-light{
+    background-color: rgb(194, 194, 194);
+}
+
 
 .stat-title{
     font-weight: bold;
@@ -47,4 +57,11 @@
 
 .full-name {
     font-size: 18px;
+}
+
+
+@media screen and (max-width: 1300px) {
+    .profile-data{
+        width: 90%;
+    }
 }

@@ -41,8 +41,12 @@ function Navbar() {
         navigate("/");
     }
 
+    function handleProfileReroute(url){
+        handleCancel();
+        navigate(url);
+    }
+
     const handleSearch = async () =>{
-        console.log(searchText);
         setSearching(true);
         try{
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users?username=${searchText}`, {
@@ -54,7 +58,6 @@ function Navbar() {
             if(response.status == 200){
                 setProfile(response.data.data[0]);
                 setProfileFound(true);
-                console.log(response.data.data[0]);
             }
     
             else if(response.status == 404){
@@ -117,7 +120,7 @@ function Navbar() {
                 </div>
                 <div className="search-results">
                     {profileFound === false && <center><h5>No Matching Profiles</h5></center>}
-                    {profileFound === true && <Link to= {`/profile/${profile.SK.replace('USER#UNAME#', '')}`}>
+                    {profileFound === true && <Link to= {`/profile/${profile.SK.replace('USER#UNAME#', '')}`} onClick={() => handleProfileReroute(`/profile/${profile.SK.replace('USER#UNAME#', '')}`)}>
                         <div className='profile-card row'>
                             <div className='col-3'><img src={profile.profile_pic}></img></div>
                             <div className='col-9'>

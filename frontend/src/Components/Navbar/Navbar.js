@@ -91,7 +91,7 @@ function Navbar() {
                     </li> */}
                     <li><NavLink  to={`/profile/${loggedIn_username_short}`}>MY PROFILE</NavLink></li>
                     <li><NavLink onClick={() => showModal()}>FIND USER</NavLink></li>
-                    <li><NavLink>CREATE POST</NavLink></li>
+                    <li><NavLink to="/new-post">CREATE POST</NavLink></li>
                     <li ><NavLink to="/" onClick={() => handleLogout()}>LOGOUT</NavLink></li>
                 </ul>
                 </div>

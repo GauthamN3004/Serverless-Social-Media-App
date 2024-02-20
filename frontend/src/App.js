@@ -8,6 +8,7 @@ import Homepage from './Pages/Homepage/Homepage';
 import SignUpPage from './Pages/SignUp/SignUp';
 import UserFeed from './Pages/UserFeed/UserFeed';
 import Profile from './Pages/Profile/Profile';
+import CreatePost from './Pages/CreatePost/CreatePost';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
             <Route path="/feed" element={<UserFeed/>} exact/>
             <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/new-post" element={<CreatePost />} />
         </Route>
       </Routes>
       <Toaster />

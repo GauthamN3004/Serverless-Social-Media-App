@@ -11,31 +11,67 @@ plugins:
   - serverless-iam-roles-per-function
 
 functions:
-  createUser:
-    handler: lambda_functions/user_handler.createUser
+  authorizer:
+    handler: lambda_functions/auth_handler.authorizer    
+
+  userLogin:
+    handler: lambda_functions/login_signup_handler.userLogin
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - dynamodb:PutItem
+          - dynamodb:Query
         Resource: 
           - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
     events:
       - http:
           method: post
-          path: api/users
+          path: api/auth/login
+          cors: true
 
-  getUser:
-    handler: lambda_functions/user_handler.getUserById
+  userSignUp:
+    handler: lambda_functions/login_signup_handler.userSignUp
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
+    events:
+      - http:
+          method: post
+          path: api/auth/signup
+          cors: true
+
+  getUserByUsername:
+    handler: lambda_functions/user_handler.getUserByUsername
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
     events:
       - http:
           method: get
-          path: api/users/{userId}
+          path: api/users
+          request:
+            parameters:
+              querystrings:
+                username: true
+          cors: true
 
   updateUser:
     handler: lambda_functions/user_handler.updateUser
@@ -52,6 +88,8 @@ functions:
       - http:
           method: put
           path: api/users/{userId}
+          # authorizer: authorizer
+          cors: true
 
   deleteUser:
     handler: lambda_functions/user_handler.deleteUser
@@ -68,7 +106,81 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}
+          # authorizer: authorizer
+          cors: true
 
+  createMultipartUpload:
+    handler: lambda_functions/s3_handler.createMultipartUpload
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/get-upload-id
+          # authorizer: authorizer
+          cors: true
+
+  getUploadPart:
+    handler: lambda_functions/s3_handler.getUploadParts
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/get-upload-parts
+          # authorizer: authorizer
+          cors: true
+
+  completeUpload:
+    handler: lambda_functions/s3_handler.completeMultipartUpload
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/complete-upload
+          # authorizer: authorizer
+          cors: true
+    
   addFollower:
     handler: lambda_functions/follower_handler.addFollower
     environment: 
@@ -78,12 +190,15 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource: 
           - !GetAtt SSMAMainTable.Arn
     events:
       - http:
           method: post
-          path: api/users/{userId}/follower
+          path: api/users/{userId}/follower/{followerId}
+          # authorizer: authorizer
+          cors: true
 
   removeFollower:
     handler: lambda_functions/follower_handler.removeFollower
@@ -94,12 +209,34 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
+          - dynamodb:UpdateItem
         Resource: 
           - !GetAtt SSMAMainTable.Arn
     events:
       - http:
-          method: delete
-          path: api/users/{userId}/follower
+          method: post
+          path: api/users/{userId}/follower/{followerId}/unfollow
+          # authorizer: authorizer
+          cors: true
+        
+  checkIfFollowingUser:
+    handler: lambda_functions/follower_handler.checkIfFollowingUser
+    environment: 
+      MAIN_TABLE: !Ref SSMAMainTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+    events:
+      - http:
+          method: get
+          path: api/users/{userId}/follower/{followerId}
+          # authorizer: authorizer
+          cors: true
+
 
   getFollowers:
     handler: lambda_functions/follower_handler.getFollowers
@@ -117,6 +254,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/follower
+          # authorizer: authorizer
+          cors: true
 
   getFollowees:
     handler: lambda_functions/follower_handler.getFollowees
@@ -135,6 +274,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/followee
+          # authorizer: authorizer
+          cors: true
 
   createPost:
     handler: lambda_functions/posts_handler.createPost
@@ -151,6 +292,8 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts
+          # authorizer: authorizer
+          cors: true
 
   getPost:
     handler: lambda_functions/posts_handler.getPostById
@@ -161,6 +304,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/posts/{postId}
+          # authorizer: authorizer
+          cors: true
 
   updatePost:
     handler: lambda_functions/posts_handler.updatePost
@@ -177,6 +322,8 @@ functions:
       - http:
           method: put
           path: api/users/{userId}/posts/{postId}
+          # authorizer: authorizer
+          cors: true
 
   deletePost:
     handler: lambda_functions/posts_handler.deletePost
@@ -193,6 +340,8 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}
+          # authorizer: authorizer
+          cors: true
 
   likePost:
     handler: lambda_functions/likes_handler.likePost
@@ -210,6 +359,8 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts/{postId}/like
+          # authorizer: authorizer
+          cors: true
 
   unlikePost:
     handler: lambda_functions/likes_handler.unlikePost
@@ -227,10 +378,30 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}/like
+          # authorizer: authorizer
+          cors: true
 
 
 resources:
   Resources:
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: serverless-social-media-app-v2
+        AccessControl: Private
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - HEAD
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              ExposedHeaders:
+                - ETag  
     SSMAMainTable:
       Type: AWS::DynamoDB::Table
       Properties:

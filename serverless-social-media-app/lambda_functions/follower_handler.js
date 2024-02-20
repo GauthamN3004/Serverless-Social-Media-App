@@ -43,16 +43,19 @@ module.exports.addFollower = async (event, context) => {
 	let event_data = JSON.parse(event.body);
 	const tableName = process.env.MAIN_TABLE;
 	let userId = event.pathParameters.userId;
+	let followerId = event.pathParameters.followerId;
 
 	try{
 		const addFollowerParams = {
 			TableName : tableName,
 			Item: {
 			   PK: `FOLLOWEE#ID#${userId}`,
-			   SK: `FOLLOWER#ID#${event_data.follower_id}`,
+			   SK: `FOLLOWER#ID#${followerId}`,
 			},
 			ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)'
 		};
+
+		console.log({ PK: `USER#ID#${userId}`, SK: `USER#UNAME#${event_data.followee_uname}` });
 
 		const updateFollowerCountParams = {
 			TableName: tableName,
@@ -64,7 +67,7 @@ module.exports.addFollower = async (event, context) => {
 
 		const updateFollowingCountParams = {
 			TableName: tableName,
-			Key: { PK: `USER#ID#${event_data.follower_id}`, SK: `USER#UNAME#${event_data.follower_uname}` },
+			Key: { PK: `USER#ID#${followerId}`, SK: `USER#UNAME#${event_data.follower_uname}` },
 			UpdateExpression: 'SET following = following + :incr',
 			ExpressionAttributeValues: { ':incr': 1 },
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
@@ -88,6 +91,8 @@ module.exports.addFollower = async (event, context) => {
 module.exports.removeFollower = async (event, context) => {
 	let event_data = JSON.parse(event.body);
 	const tableName = process.env.MAIN_TABLE;
+	let userId = event.pathParameters.userId;
+	let followerId = event.pathParameters.followerId;
 	try{
 		const deleteFollowerParams = {
 			TableName : tableName,
@@ -97,7 +102,7 @@ module.exports.removeFollower = async (event, context) => {
 
 		const updateFollowerCountParams = {
 			TableName: tableName,
-			Key: { PK: `USER#ID#${event_data.followee_id}`, SK: `USER#UNAME#${event_data.followee_uname}` },
+			Key: { PK: `USER#ID#${userId}`, SK: `USER#UNAME#${event_data.followee_uname}` },
 			UpdateExpression: 'SET followers = followers - :decr',
 			ExpressionAttributeValues: { ':decr': 1 },
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
@@ -105,7 +110,7 @@ module.exports.removeFollower = async (event, context) => {
 
 		const updateFollowingCountParams = {
 			TableName: tableName,
-			Key: { PK: `USER#ID#${event_data.follower_id}`, SK: `USER#UNAME#${event_data.follower_uname}` },
+			Key: { PK: `USER#ID#${followerId}`, SK: `USER#UNAME#${event_data.follower_uname}` },
 			UpdateExpression: 'SET following = following - :decr',
 			ExpressionAttributeValues: { ':decr': 1 },
 			ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'

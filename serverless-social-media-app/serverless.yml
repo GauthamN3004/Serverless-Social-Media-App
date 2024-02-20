@@ -88,7 +88,7 @@ functions:
       - http:
           method: put
           path: api/users/{userId}
-          authorizer: authorizer
+          # authorizer: authorizer
           cors: true
 
   deleteUser:
@@ -106,9 +106,81 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}
-          authorizer: authorizer
+          # authorizer: authorizer
           cors: true
 
+  createMultipartUpload:
+    handler: lambda_functions/s3_handler.createMultipartUpload
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/get-upload-id
+          # authorizer: authorizer
+          cors: true
+
+  getUploadPart:
+    handler: lambda_functions/s3_handler.getUploadParts
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/get-upload-parts
+          # authorizer: authorizer
+          cors: true
+
+  completeUpload:
+    handler: lambda_functions/s3_handler.completeMultipartUpload
+    environment: 
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+          - s3:ListBucketMultipartUploads
+          - s3:AbortMultipartUpload
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          - s3:ListMultipartUploadParts
+        Resource:
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
+          - "arn:aws:s3:::serverless-social-media-app-v2"
+    events:
+      - http:
+          method: post
+          path: api/s3/complete-upload
+          # authorizer: authorizer
+          cors: true
+    
   addFollower:
     handler: lambda_functions/follower_handler.addFollower
     environment: 
@@ -124,8 +196,9 @@ functions:
     events:
       - http:
           method: post
-          path: api/users/{userId}/follower
-          authorizer: authorizer
+          path: api/users/{userId}/follower/{followerId}
+          # authorizer: authorizer
+          cors: true
 
   removeFollower:
     handler: lambda_functions/follower_handler.removeFollower
@@ -141,9 +214,10 @@ functions:
           - !GetAtt SSMAMainTable.Arn
     events:
       - http:
-          method: delete
-          path: api/users/{userId}/follower
-          authorizer: authorizer
+          method: post
+          path: api/users/{userId}/follower/{followerId}/unfollow
+          # authorizer: authorizer
+          cors: true
         
   checkIfFollowingUser:
     handler: lambda_functions/follower_handler.checkIfFollowingUser
@@ -160,7 +234,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/follower/{followerId}
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
 
   getFollowers:
@@ -179,7 +254,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/follower
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   getFollowees:
     handler: lambda_functions/follower_handler.getFollowees
@@ -198,7 +274,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/followee
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   createPost:
     handler: lambda_functions/posts_handler.createPost
@@ -215,7 +292,8 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   getPost:
     handler: lambda_functions/posts_handler.getPostById
@@ -226,7 +304,8 @@ functions:
       - http:
           method: get
           path: api/users/{userId}/posts/{postId}
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   updatePost:
     handler: lambda_functions/posts_handler.updatePost
@@ -243,7 +322,8 @@ functions:
       - http:
           method: put
           path: api/users/{userId}/posts/{postId}
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   deletePost:
     handler: lambda_functions/posts_handler.deletePost
@@ -260,7 +340,8 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   likePost:
     handler: lambda_functions/likes_handler.likePost
@@ -278,7 +359,8 @@ functions:
       - http:
           method: post
           path: api/users/{userId}/posts/{postId}/like
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
   unlikePost:
     handler: lambda_functions/likes_handler.unlikePost
@@ -296,11 +378,30 @@ functions:
       - http:
           method: delete
           path: api/users/{userId}/posts/{postId}/like
-          authorizer: authorizer
+          # authorizer: authorizer
+          cors: true
 
 
 resources:
   Resources:
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: serverless-social-media-app-v2
+        AccessControl: Private
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - HEAD
+              AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              ExposedHeaders:
+                - ETag  
     SSMAMainTable:
       Type: AWS::DynamoDB::Table
       Properties:

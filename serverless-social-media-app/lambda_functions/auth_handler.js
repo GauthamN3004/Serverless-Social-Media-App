@@ -31,8 +31,9 @@ const generateAuthResponse = (user, effect, methodArn) => {
 module.exports.authorizer = async (event, context) => {
     try {
         const token = event.authorizationToken;
-        const decoded = jwt.verify(token, secretKey);
-        const user = decoded.data;
+        const user = jwt.verify(token, secretKey);
+
+        console.log(user);
 
         return generateAuthResponse(user, 'Allow', event.methodArn);
     } catch (error) {

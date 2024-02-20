@@ -1,110 +1,69 @@
-const dynamoDB = require("aws-sdk/clients/dynamodb");
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+const AWS = require('aws-sdk');
+const dotenv = require('dotenv');
 
-const documentClient = new dynamoDB.DocumentClient({region: 'ap-south-1'});
-const tableName = 'SSMA_Main';
+dotenv.config();
 
-const getUser = async (username) => {
-    console.log(`USER#UNAME#${username}`);
-    var params = {
-        TableName: tableName,
-        IndexName: 'InvertedIndex',
-        KeyConditionExpression: 'SK = :sk',
-        ExpressionAttributeValues: {
-            ':sk': `USER#UNAME#${username}`,
-        }
-    };
+const s3 = new AWS.S3();
 
-    const resp = await documentClient.query(params).promise();
-    const data = resp['Items'];
-    return data;
-}
-
-const getResponse = (statusCode, status, message) => {
+const getResponse = (statusCode, status, message, data) => {
     return {
         statusCode: statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
         body: JSON.stringify({
             status: status,
             message: message,
+			data: data
         }),
     }
 }
 
-const userLogin = async (event, context) => {
-    //const event_data = JSON.parse(event.body);
-    const event_data = {
-        "username": "gauthamn3004",
-        "password": "gautham"
-    }
-    
-    try{
-        const data = await getUser(event_data.username);
-        if(data.length == 0){
-            return getResponse(401, 'unauthorized', 'Username or password is incorrect');
-        }
-        console.log(data);
-        const user = data[0];
-        const hashedPassword = user.password;
-
-        const pass_compare = await bcrypt.compare(event_data.password, hashedPassword);
-        console.log(pass_compare);
-        if(!pass_compare){
-            return getResponse(401, 'unauthorized', 'Username or password is incorrect');
-        }
-
-        const payload = {
-            userId: user['PK'],
-            username: user['SK']
-        };
-
-        const secretKey = process.env.SECRET_KEY;
-        const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
-        console.log(token);
-        return  getResponse(200, 'success', token);
-    } catch(error) {
-        console.log(error.message);
-        return getResponse(500, 'error', error.message);
-    }
-};
-
-const userSignUp = async (event, context) => {
-	// let event_data = JSON.parse(event.body);
-    const event_data = {
-        "username": "gauthamn3004",
-        "password": "gautham"
-    }
-	let userId = uuidv4();
+const generatePresignedURL = async (event, context) => {
 	try{
-		const data = await getUser(event_data.username);
-        console.log(data);
-        if (data.length > 0){
-            return getResponse(409, 'Conflict', 'Username already exists');
-        }
-        
-        const hashedPassword = await bcrypt.hash(event_data.password, 10);
-        console.log("Hashed Pass" + hashedPassword);
-        var newUserParams = {
-			TableName : tableName,
-			Item: {
-			   PK: `USER#ID#${userId}`,
-			   SK: `USER#UNAME#${event_data.username}`,
-               password: hashedPassword,
-			   followers: 0,
-               following: 0,
-               profile_pic: 'None'
-			}
-		};
+        const objectKey = 'test';
+        const params = {
+            Bucket: process.env.S3_BUCKET,
+            Key: objectKey,
+            Expires: 100
+        };
+        const presignedUrl = s3.getSignedUrl('putObject', params);
 
-		// await documentClient.put(newUserParams).promise();
-
-        return getResponse(201, 'success', 'User created succesfully');
+        return getResponse(200, 'success', "Presigned URL generated", presignedUrl);
 	} catch(error) {
-		return getResponse(500, 'error', error.message);
+		return getResponse(500, 'error', error.message, "");
 	}
-
 };
 
-userLogin();
+const createMultipartUpload = async (event) => {
+	//const body = JSON.parse(event.body);
+    const body = {'fileName': 'test'}
+
+	try {
+		const ttl = 20 * 60 * 1000; 
+		const expires = Date.now() + ttl;
+		let params = {
+			Bucket: process.env.S3_BUCKET,
+			Key: body.fileName,
+			Expires: expires
+		};
+		const multiPartUpload = await s3.createMultipartUpload(params).promise();
+
+        return getResponse(200, 'success', "Upload ID generated", { uploadId: multiPartUpload.UploadId });
+	} catch (error) {
+		console.log(error);
+        return getResponse(500, 'error', error.message, "");
+	}
+};
+
+const getresult = async () => {
+    const res = await createMultipartUpload();
+    console.log(res);
+    const response = JSON.parse(res['body']);
+    console.log(response);
+    const uploadId = response['data']['uploadId'];
+    console.log(uploadId);
+}
+
+getresult();

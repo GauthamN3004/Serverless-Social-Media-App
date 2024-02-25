@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import "./Navbar.css"
-import { Link, NavLink, useNavigate, useParams } from "react-router-dom";
-import { Button, Modal } from 'antd';
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Modal } from 'antd';
 import imageLogo from "../../ssma_logo.png";
 import toast from 'react-hot-toast';
 import axios from "axios";
@@ -55,12 +55,12 @@ function Navbar() {
                 },
             });
             
-            if(response.status == 200){
+            if(response.status === 200){
                 setProfile(response.data.data[0]);
                 setProfileFound(true);
             }
     
-            else if(response.status == 404){
+            else if(response.status === 404){
                 setProfile({});
                 setProfileFound(false);
             }

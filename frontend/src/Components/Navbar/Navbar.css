@@ -110,7 +110,7 @@
     margin-right: 10px;
 }
 
-@media (max-width: 600px){
+@media (max-width: 750px){
     .navBar{
         /* background-color: rgba(0,0,0,0.7); */
         flex-direction: column;

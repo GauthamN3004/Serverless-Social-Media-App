@@ -1,15 +1,14 @@
 
 .parent-div {
     height: 100%;
-    display: flex;
     justify-content: center;
-    align-items: center;
     margin-top: 50px;
 }
 
 
 .profile-data{
-    margin: auto;
+    display: flex;
+    margin: auto !important;
     margin-top: 30px;
     width: 70%;
     padding: 20px;
@@ -50,7 +49,6 @@
     background-color: rgb(194, 194, 194);
 }
 
-
 .stat-title{
     font-weight: bold;
 }
@@ -59,9 +57,22 @@
     font-size: 18px;
 }
 
-
 @media screen and (max-width: 1300px) {
     .profile-data{
         width: 90%;
+    }
+    .profile-data{
+        width: 90%;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .user-stats{
+        display: block;
+        width: 100%;
+    }
+    .username{
+        margin-top: 20px;
+        text-align: center;
     }
 }

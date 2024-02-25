@@ -4,6 +4,8 @@ import "./Profile.css";
 import { useState, useEffect } from "react";
 import toast from 'react-hot-toast';
 import axios from "axios";
+import defaultPic from "../../default_profile_pic.png";
+import PostThumbnail from "../../Components/PostThumbnail/PostThumbnail";
 
 function Profile() {
     const { username } = useParams();
@@ -12,12 +14,15 @@ function Profile() {
     const [profileUserId, setProfileUserId] = useState(null);
     const [profileFound, setProfileFound] = useState(null);
     const [following, setFollowing] = useState(null);
+    const [lastEvaluatedKey, setLastEvaluatedKey] = useState('');
+    const [userPosts, setUserPosts] = useState([]);
+    const [allPostsLoaded, setAllPostsLoaded] = useState(false);
+    const [isPostsLoading, setPostsLoading] = useState(true);
     const userData = JSON.parse(localStorage.getItem('ssma-auth'));
     const loggedIn_userId = userData['userId'].replace('USER#ID#', '');
     const loggedIn_username_short = userData['username'].replace('USER#UNAME#', '');
 
     axios.defaults.headers.common['Authorization'] = userData['token'];
-
     const checkFollowing = async () => {
         if(profileUserId && loggedIn_username_short !== username){
             const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/${profileUserId}/follower/${loggedIn_userId}`, {
@@ -112,23 +117,64 @@ function Profile() {
         }
     }
 
+    const fetchUserPosts = async (reset) => {
+        try{
+            setPostsLoading(true);
+            if(!allPostsLoaded && profileUserId !== null){
+                var url = `${process.env.REACT_APP_API_URL}/api/users/${profileUserId}/posts`;
+                if(lastEvaluatedKey != ''){
+                    url += `?prevPost=${encodeURIComponent(lastEvaluatedKey)}`;
+                }
+                
+                console.log(url);
+
+                const response = await axios.get(url, {
+                    validateStatus: function (status) {
+                        return status >= 200 && status < 500;
+                    },
+                });
+                if(response.status === 200){
+                    if(reset){
+                        setUserPosts(response.data.posts);
+                    } else {
+                        setUserPosts(prevPosts => [...prevPosts, ...response.data.posts]);
+                    }
+                    
+                    if(response.data.lastEvaluatedKey){
+                        setLastEvaluatedKey(response.data.lastEvaluatedKey.PK);
+                    } else {
+                        setAllPostsLoaded(true);
+                    }
+                }
+            }
+            setPostsLoading(false);
+        } catch(error) {
+            console.log(error.message);
+            setPostsLoading(false);
+            toast.error("Something went wrong!");
+        }
+    }
+
     useEffect(() => {
         setFollowing(null);
         fetchUserDetails();
+        setAllPostsLoaded(false);
+        setLastEvaluatedKey('');
     }, [username])
 
     useEffect(() => {
         checkFollowing();
+        fetchUserPosts(true);
     }, [profileUserId])
 
 
     return (
         <Layout>
             {(profileFound) ?
-                <div className="parent-div">
+                <div className="container-fluid parent-div">
                     <div className="row profile-data">
                         <div className="col-md-4 col-lg-6 profile-pic">
-                            <center><img src={profile.profile_pic}></img></center>
+                            <center><img src={profile.profile_pic || defaultPic}></img></center>
                         </div>
                         <div className="col-md-8 col-lg-6 user-info">
                             <div className="username">
@@ -137,7 +183,7 @@ function Profile() {
                                     (username === loggedIn_username_short) && <button className="btn btn btn-light">EDIT PROFILE</button>
                                 }
                                 {
-                                    (username !== loggedIn_username_short && following === true ) && <button className="btn btn btn-danger" onClick={() => {console.log("PROF + " + profile.SK); unFollowUser(profile.SK.replace('USER#UNAME#',''))}}>UNFOLLOW</button>
+                                    (username !== loggedIn_username_short && following === true ) && <button className="btn btn btn-danger" onClick={() => {unFollowUser(profile.SK.replace('USER#UNAME#',''))}}>UNFOLLOW</button>
                                 }
                                 {
                                     (following === false ) && <button className="btn btn btn-primary" onClick={() => followUser(profile.SK.replace('USER#UNAME#',''))}>FOLLOW</button>
@@ -184,11 +230,11 @@ function Profile() {
                             <></>
                             }
                         </div>
-                    </div>
-                    <div className="row">
-                        <div className="posts">
-
-                        </div>
+                    </div><br></br>
+                    <div className="row profile-data">
+                        {userPosts.map((post) => <PostThumbnail post={post}/>)}
+                        
+                        {!isPostsLoading && !allPostsLoaded && <button className="btn btn-primary" onClick={() => fetchUserPosts(false)}>LOAD MORE</button>}
                     </div>
                 </div> 
                 :

@@ -51,11 +51,11 @@ module.exports.addFollower = async (event, context) => {
 			Item: {
 			   PK: `FOLLOWEE#ID#${userId}`,
 			   SK: `FOLLOWER#ID#${followerId}`,
+			   followee_uname: `USER#UNAME#${event_data.followee_uname}`,
+			   follower_uname: `USER#UNAME#${event_data.follower_uname}`
 			},
 			ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)'
 		};
-
-		console.log({ PK: `USER#ID#${userId}`, SK: `USER#UNAME#${event_data.followee_uname}` });
 
 		const updateFollowerCountParams = {
 			TableName: tableName,

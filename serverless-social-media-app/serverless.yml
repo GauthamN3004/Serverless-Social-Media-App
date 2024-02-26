@@ -286,6 +286,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource: 
           - !GetAtt SSMAMainTable.Arn
     events:
@@ -295,15 +296,28 @@ functions:
           # authorizer: authorizer
           cors: true
 
-  getPost:
-    handler: lambda_functions/posts_handler.getPostById
+  getPosts:
+    handler: lambda_functions/posts_handler.getPosts
     environment: 
       MAIN_TABLE: !Ref SSMAMainTable
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:Query
+        Resource: 
+          - !GetAtt SSMAMainTable.Arn
+          - !Sub "${SSMAMainTable.Arn}/index/InvertedIndex"
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+        Resource: 
+          - "arn:aws:s3:::serverless-social-media-app-v2/*"
     events:
       - http:
           method: get
-          path: api/users/{userId}/posts/{postId}
+          path: api/users/{userId}/posts
           # authorizer: authorizer
           cors: true
 

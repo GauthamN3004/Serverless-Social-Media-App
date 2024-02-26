@@ -1,3 +1,6 @@
+'use strict';
+const dynamoDB = require("aws-sdk/clients/dynamodb");
+const documentClient = new dynamoDB.DocumentClient({region: 'ap-south-1'});
 const AWS = require('aws-sdk');
 const dotenv = require('dotenv');
 
@@ -15,24 +18,23 @@ const getResponse = (statusCode, status, message, data) => {
         body: JSON.stringify({
             status: status,
             message: message,
-			data: data
+			...data
         }),
     }
 }
 
-const generatePresignedURL = async (event, context) => {
+const generatePresignedURL = (key) => {
 	try{
-        const objectKey = 'test';
         const params = {
-            Bucket: process.env.S3_BUCKET,
-            Key: objectKey,
-            Expires: 100
+            Bucket: 'serverless-social-media-app-v2',
+            Key: key,
+            Expires: 900
         };
-        const presignedUrl = s3.getSignedUrl('putObject', params);
+        const presignedUrl = s3.getSignedUrl('getObject', params);
 
-        return getResponse(200, 'success', "Presigned URL generated", presignedUrl);
+        return presignedUrl;
 	} catch(error) {
-		return getResponse(500, 'error', error.message, "");
+		return "Error";
 	}
 };
 
@@ -57,13 +59,43 @@ const createMultipartUpload = async (event) => {
 	}
 };
 
-const getresult = async () => {
-    const res = await createMultipartUpload();
-    console.log(res);
-    const response = JSON.parse(res['body']);
-    console.log(response);
-    const uploadId = response['data']['uploadId'];
-    console.log(uploadId);
-}
+const getPosts = async (event) => {
+	let userId = 'USER#ID#' + '3330db8a-ab00-4740-b327-e8b7fe55696b';
+	const tableName = process.env.MAIN_TABLE;
+    const lastEvaluatedKey = null;
+	
+    const params = {
+		TableName: 'SSMA_Main',
+		IndexName: 'InvertedIndex',
+		KeyConditionExpression: 'SK = :sk_val AND begins_with(PK, :pk_val)',
+		ExpressionAttributeValues: {
+		  ':sk_val': userId,
+		  ':pk_val': 'POST#'
+		},
+		Limit: 1,
+		ScanIndexForward: false
+	};
+	
+	params.ExclusiveStartKey = {
+        "PK": "POST#1708828969#f652f5c4-2713-406a-a135-de0bae98b5a8",
+        "SK": "USER#ID#3330db8a-ab00-4740-b327-e8b7fe55696b"
+    };
 
-getresult();
+	const data = await documentClient.query(params).promise();
+    console.log(data.Items);
+    const res = []
+    for(let post_index = 0; post_index < data.Items.length; post_index++){
+        var post_data = {
+            "caption": data.Items[post_index].postCaption,
+            "likes": data.Items[post_index].likes,
+            "comments": data.Items[post_index].comments,
+            "userId": data.Items[post_index].SK,
+            "file": generatePresignedURL(data.Items[post_index].file),
+            "thumbnail": generatePresignedURL(data.Items[post_index].thumbnail || data.Items[post_index].file)
+        }
+        res.push(post_data);
+    }
+    console.log(res);
+};
+
+getPosts();

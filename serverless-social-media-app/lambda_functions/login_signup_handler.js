@@ -94,7 +94,8 @@ module.exports.userSignUp = async (event, context) => {
                full_name: event_data.full_name,
 			   followers: 0,
                following: 0,
-               profile_pic: 'None'
+               posts: 0,
+               profile_pic: process.env.DEFAULT_DP
 			}
 		};
 

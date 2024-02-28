@@ -135,8 +135,7 @@ module.exports.checkIfFollowingUser = async (event, context) => {
 	const tableName = process.env.MAIN_TABLE;
 	let userId = event.pathParameters.userId;
 	let followerId = event.pathParameters.followerId;
-	console.log(userId);
-	console.log(followerId);
+
 	try{
         var params = {
             TableName: tableName,
@@ -145,8 +144,7 @@ module.exports.checkIfFollowingUser = async (event, context) => {
 		console.log(params);
 
 		const resp = await documentClient.get(params).promise();
-		console.log(resp);
-		console.log("Resp" + resp);
+
 		if (resp && resp.Item) {
             return getResponse(200, 'success', 'yes', []);
         } else {

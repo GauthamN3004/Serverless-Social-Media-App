@@ -2,11 +2,27 @@
 const dynamoDB = require("aws-sdk/clients/dynamodb");
 const documentClient = new dynamoDB.DocumentClient({region: 'ap-south-1'});
 
-module.exports.likePost = async (event, context, cb) => {
+const getResponse = (statusCode, status, message, data) => {
+    return {
+        statusCode: statusCode,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true,
+        },
+        body: JSON.stringify({
+            status: status,
+            message: message,
+			...data
+        }),
+    }
+}
+
+module.exports.likePost = async (event) => {
 	const tableName = process.env.MAIN_TABLE;
 	try{
         let userId = event.pathParameters.userId;
         let postId = event.pathParameters.postId;
+        const queryStringParameters = event.queryStringParameters;
         const params = {
             TransactItems: [
                 {
@@ -23,7 +39,7 @@ module.exports.likePost = async (event, context, cb) => {
                         TableName: tableName,
                         Item: {
                             PK: `POST#ID#${postId}`,
-                            SK: `USER#ID#${userId}#LIKE`,
+                            SK: `LIKE#USER#ID#${queryStringParameters.liker}`,
                         },
                         ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)',
                     },
@@ -33,32 +49,20 @@ module.exports.likePost = async (event, context, cb) => {
         
 
 		await documentClient.transactWrite(params).promise();
-		cb(null, {
-			statusCode: 200,
-			body: JSON.stringify({
-				status: 'success',
-				message: `Post ${postId} was liked by User ${userId}`,
-			}),
-	    });
+
+        return getResponse(201, 'success', 'Post was liked', {});
 	} catch(error) {
-		cb(null, {
-			statusCode: 500,
-			body: JSON.stringify({
-				status: 'error',
-				message: error.message,
-			}),
-	    });
+		return getResponse(500, 'error', error.message, {});
 	}
 
 };
 
-
-
-module.exports.unlikePost = async (event, context, cb) => {
+module.exports.unlikePost = async (event) => {
 	const tableName = process.env.MAIN_TABLE;
 	try{
         let userId = event.pathParameters.userId;
         let postId = event.pathParameters.postId;
+        const queryStringParameters = event.queryStringParameters;
         const params = {
             TransactItems: [
                 {
@@ -73,7 +77,7 @@ module.exports.unlikePost = async (event, context, cb) => {
                 {
                     Delete: {
                         TableName: tableName,
-                        Key: { PK: `POST#ID#${postId}`, SK: `USER#ID#${userId}#LIKE` },
+                        Key: { PK: `POST#ID#${postId}`, SK: `LIKE#USER#ID#${queryStringParameters.liker}` },
                         ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK)'
                     }
                 }
@@ -82,21 +86,40 @@ module.exports.unlikePost = async (event, context, cb) => {
         
 
 		await documentClient.transactWrite(params).promise();
-		cb(null, {
-			statusCode: 200,
-			body: JSON.stringify({
-				status: 'success',
-				message: `Post ${postId} was unliked by User ${userId}`,
-			}),
-	    });
+
+        return getResponse(200, 'success', 'Post was unliked', {});
 	} catch(error) {
-		cb(null, {
-			statusCode: 500,
-			body: JSON.stringify({
-				status: 'error',
-				message: error.message,
-			}),
-	    });
+		return getResponse(500, 'error', error.message, {});
+	}
+
+};
+
+
+module.exports.getPostLike = async (event) => {
+	const tableName = process.env.MAIN_TABLE;
+	try{
+        let userId = event.pathParameters.userId;
+        let postId = event.pathParameters.postId;
+        const queryStringParameters = event.queryStringParameters;
+        var params = {
+            TableName : tableName,
+            Key: {
+                PK: `POST#ID#${postId}`,
+                SK: `LIKE#USER#ID#${queryStringParameters.liker}`
+            }
+        };
+        
+
+		const resp = await documentClient.get(params).promise();
+
+		if (resp && resp.Item) {
+            return getResponse(200, 'success', 'yes', {});
+        } else {
+            return getResponse(404, 'success', 'no', {});
+        }
+
+	} catch(error) {
+		return getResponse(500, 'error', error.message, {});
 	}
 
 };

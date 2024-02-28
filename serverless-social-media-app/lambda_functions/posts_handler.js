@@ -140,12 +140,14 @@ module.exports.getPosts = async (event) => {
 		const result = []
 		for(let post_index = 0; post_index < data.Items.length; post_index++){
 			var post_data = {
+				"postId": data.Items[post_index].PK,
 				"caption": data.Items[post_index].postCaption,
 				"likes": data.Items[post_index].likes,
 				"comments": data.Items[post_index].comments,
 				"userId": data.Items[post_index].SK,
 				"file": generatePresignedURL(data.Items[post_index].file),
-				"thumbnail": generatePresignedURL(data.Items[post_index].thumbnail || data.Items[post_index].file)
+				"thumbnail": generatePresignedURL(data.Items[post_index].thumbnail || data.Items[post_index].file),
+				"isVideo": data.Items[post_index].isVideo
 			}
 			result.push(post_data);
 		}

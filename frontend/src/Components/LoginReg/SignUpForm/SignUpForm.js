@@ -35,7 +35,6 @@ function SignUpForm() {
                 }, 10);
             }
             else{
-                console.log("error");
                 toast.error(response.data.message);
             }
         } catch(error){

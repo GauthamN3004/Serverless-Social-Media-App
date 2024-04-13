@@ -6,10 +6,10 @@ import toast from 'react-hot-toast';
 import axios from "axios";
 
 function LoginForm() {
-
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -28,12 +28,13 @@ function LoginForm() {
             });
             
             if(response.status == 200){
-                const token = response.data.message;
-                localStorage.setItem('ssma-auth', JSON.stringify({'token': token}));
+                const resp_data = response.data.message;
+                const sessionExpirationTime = new Date().getTime() + 900000;
+                const login_data = {'token': resp_data['token'], 'userId': resp_data['userId'], 'username': resp_data['username'],'sessionExpirationTime': sessionExpirationTime}
+                localStorage.setItem('ssma-auth', JSON.stringify(login_data));
                 navigate("/feed");
             }
             else{
-                console.log("error");
                 toast.error(response.data.message);
             }
 
@@ -58,9 +59,9 @@ function LoginForm() {
                 </div>
                 <br></br>
                 <center>{(loading) ? 
-                    <button class="btn btn-info" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> &nbsp;&nbsp;
-                        <span class="sr-only">LOGIN</span>
+                    <button className="btn btn-info" type="button" disabled>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> &nbsp;&nbsp;
+                        <span className="sr-only">LOGIN</span>
                     </button>
                     :
                     <button type="submit" className="btn btn-info" onClick={(e) => handleLogin(e)}>LOGIN</button>

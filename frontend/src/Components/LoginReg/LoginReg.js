@@ -2,6 +2,7 @@ import "./LoginReg.css";
 import ssma_image from "../../bg_image.jpg";
 
 function LoginReg({ children }) {
+    console.log(ssma_image);
     return <>
         <div className="container-fluid">
             <div className="row">

@@ -57,6 +57,10 @@
     font-size: 18px;
 }
 
+.like-div {
+    margin-top: 10px;
+}
+
 @media screen and (max-width: 1300px) {
     .profile-data{
         width: 90%;

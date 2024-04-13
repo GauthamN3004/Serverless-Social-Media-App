@@ -95,7 +95,7 @@ function CreatePost () {
             return;
         }
 
-        const postId = `POST#${Math.floor(new Date().getTime() / 1000)}#${uuidv4()}`;
+        const postId = `POST#ID#${Math.floor(new Date().getTime() / 1000)}-${uuidv4()}`;
         
         try {
             setUploading(true);

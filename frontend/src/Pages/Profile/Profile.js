@@ -232,7 +232,12 @@ function Profile() {
                         </div>
                     </div><br></br>
                     <div className="row profile-data">
-                        {userPosts.map((post) => <PostThumbnail post={post}/>)}
+                        {userPosts.map((post) => <PostThumbnail 
+                                                    post={post} 
+                                                    loggedIn_username_short={loggedIn_username_short}
+                                                    loggedIn_userId={loggedIn_userId}
+                                                    viewingUser={username}
+                                            />)}
                         
                         {!isPostsLoading && !allPostsLoaded && <button className="btn btn-primary" onClick={() => fetchUserPosts(false)}>LOAD MORE</button>}
                     </div>
